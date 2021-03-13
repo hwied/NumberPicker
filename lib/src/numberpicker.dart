@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:math';
 
 typedef TextMapper = String Function(String numberText);
 
@@ -11,8 +12,8 @@ class NumberPicker extends StatefulWidget {
   /// Max value user can pick
   final int maxValue;
 
-  /// Currently selected value
-  final int value;
+  /// The initial value
+  final int initialValue;
 
   /// Called when selected value changes
   final ValueChanged<int> onChanged;
@@ -57,11 +58,13 @@ class NumberPicker extends StatefulWidget {
   /// Whether the direction shall be reversed
   final bool reverse;
 
+  final InputDecoration? inputDecoration;
+
   const NumberPicker({
     Key? key,
     required this.minValue,
     required this.maxValue,
-    required this.value,
+    required this.initialValue,
     required this.onChanged,
     this.itemCount = 3,
     this.step = 1,
@@ -75,8 +78,9 @@ class NumberPicker extends StatefulWidget {
     this.zeroPad = false,
     this.textMapper,
     this.reverse = false,
-  })  : assert(minValue <= value),
-        assert(value <= maxValue),
+    this.inputDecoration,
+  })  : assert(minValue <= initialValue),
+        assert(initialValue <= maxValue),
         super(key: key);
 
   @override
@@ -85,26 +89,30 @@ class NumberPicker extends StatefulWidget {
 
 class _NumberPickerState extends State<NumberPicker> {
   late ScrollController _scrollController;
+  bool isEditActive=false;
+  TextEditingController _textEditingController = TextEditingController();
+  late int currentValue;
 
   @override
   void initState() {
     super.initState();
     final initialOffset =
-        (widget.value - widget.minValue) ~/ widget.step * itemExtent;
+        (widget.initialValue - widget.minValue) ~/ widget.step * itemExtent;
     _scrollController = ScrollController(initialScrollOffset: initialOffset)
       ..addListener(_scrollListener);
+    currentValue = widget.initialValue;
+    _textEditingController.text = currentValue.toString();
   }
 
   void _scrollListener() {
     final indexOfMiddleElement =
         (_scrollController.offset / itemExtent).round().clamp(0, itemCount - 1);
     final intValueInTheMiddle = _intValueFromIndex(indexOfMiddleElement + 1);
-
-    if (widget.value != intValueInTheMiddle) {
-      widget.onChanged(intValueInTheMiddle);
-      if (widget.haptics) {
-        HapticFeedback.selectionClick();
-      }
+    _textEditingController.text = intValueInTheMiddle.toString();
+    currentValue = intValueInTheMiddle;
+    widget.onChanged(intValueInTheMiddle);
+    if (widget.haptics) {
+      HapticFeedback.selectionClick();
     }
     Future.delayed(
       Duration(milliseconds: 100),
@@ -115,7 +123,7 @@ class _NumberPickerState extends State<NumberPicker> {
   @override
   void didUpdateWidget(NumberPicker oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.value != widget.value) {
+    if (oldWidget.initialValue != widget.initialValue) {
       _maybeCenterValue();
     }
   }
@@ -123,6 +131,7 @@ class _NumberPickerState extends State<NumberPicker> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _textEditingController.dispose();
     super.dispose();
   }
 
@@ -136,41 +145,72 @@ class _NumberPickerState extends State<NumberPicker> {
   int get listItemsCount => itemCount + 2;
 
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: widget.axis == Axis.vertical
-          ? widget.itemWidth
-          : widget.itemCount * widget.itemWidth,
-      height: widget.axis == Axis.vertical
-          ? widget.itemCount * widget.itemHeight
-          : widget.itemHeight,
-      child: NotificationListener<ScrollEndNotification>(
-        onNotification: (not) {
-          if (not.dragDetails?.primaryVelocity == 0) {
-            Future.microtask(() => _maybeCenterValue());
-          }
-          return true;
-        },
-        child: Stack(
-          children: [
-            ListView.builder(
-              reverse: widget.reverse,
-              itemCount: listItemsCount,
-              scrollDirection: widget.axis,
-              controller: _scrollController,
-              itemExtent: itemExtent,
-              itemBuilder: _itemBuilder,
-            ),
-            _NumberPickerSelectedItemDecoration(
-              axis: widget.axis,
-              itemExtent: itemExtent,
-              decoration: widget.decoration,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Builder(
+      builder: (context) {
+        VoidCallback finished = (){
+          setState(()=>isEditActive=false);
+          currentValue = int.parse(_textEditingController.text);
+          currentValue = max(widget.minValue, min(currentValue, widget.maxValue));
+          _scrollController.jumpTo(itemExtent*(_indexFromIntValue(currentValue)-1));
+        };
+        return GestureDetector(
+            onDoubleTap: ()=>setState(()=>isEditActive=true),
+            child: SizedBox(
+                width: widget.axis == Axis.vertical
+                    ? widget.itemWidth
+                    : widget.itemCount * widget.itemWidth,
+                height: widget.axis == Axis.vertical
+                    ? widget.itemCount * widget.itemHeight
+                    : widget.itemHeight,
+                child: NotificationListener<ScrollEndNotification>(
+                  onNotification: (not) {
+                    if (not.dragDetails?.primaryVelocity == 0) {
+                      Future.microtask(() => _maybeCenterValue());
+                    }
+                    return true;
+                  },
+                  child: Stack(
+                    children: [
+                      ListView.builder(
+                        reverse: widget.reverse,
+                        itemCount: listItemsCount,
+                        scrollDirection: widget.axis,
+                        controller: _scrollController,
+                        itemExtent: itemExtent,
+                        itemBuilder: _itemBuilder,
+                      ),
+                      _NumberPickerSelectedItemDecoration(
+                        axis: widget.axis,
+                        itemExtent: itemExtent,
+                        decoration: widget.decoration,
+                      ),
+                      if (isEditActive)
+                      Positioned.fill(
+                        child: Opacity(
+                            opacity: 0.5,
+                            // child: Container(
+                            //   width: double.infinity, // widget.axis == Axis.horizontal ? 2*itemExtent * itemCount : widget.itemWidth,
+                            //   height: double.infinity, // widget.axis == Axis.vertical ? 2*itemExtent * itemCount : widget.itemHeight,
+                            // )
+                        )),
+                      if (isEditActive) Center(
+                        child: TextField(
+                          controller: _textEditingController,
+                          onEditingComplete: finished,
+                          onSubmitted: (val)=>finished(),
+                          decoration: InputDecoration(border: InputBorder.none),
+                          keyboardType: TextInputType.number,
+                          style: widget.textStyle,
+                          textAlign: TextAlign.center,
+                        )
+                      )
+                    ],
+                  ),
+                )
+            )
+        );
+      }
+  );
 
   Widget _itemBuilder(BuildContext context, int index) {
     final themeData = Theme.of(context);
@@ -180,14 +220,29 @@ class _NumberPickerState extends State<NumberPicker> {
 
     final value = _intValueFromIndex(index);
     final isExtra = index == 0 || index == listItemsCount - 1;
-    final itemStyle = value == widget.value ? selectedStyle : defaultStyle;
+    final itemStyle = value == currentValue ? selectedStyle : defaultStyle;
 
     final child = isExtra
         ? SizedBox.shrink()
-        : Text(
-            _getDisplayedValue(value),
-            style: itemStyle,
-          );
+        : TextButton(
+            onPressed: () {
+              _scrollController.animateTo(itemExtent*(index-1),
+                duration: Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic);
+                currentValue = _intValueFromIndex(index);
+            },
+            // padding: const EdgeInsets(0.0),
+            child: isEditActive ? Opacity(
+                opacity: 0.5,
+                child: Text(
+                  _getDisplayedValue(value),
+                  style: itemStyle,
+                )
+            ) : Text(
+              _getDisplayedValue(value),
+              style: itemStyle,
+            )
+        );
 
     return Container(
       width: widget.itemWidth,
@@ -214,9 +269,13 @@ class _NumberPickerState extends State<NumberPicker> {
     return widget.minValue + index * widget.step;
   }
 
+  int _indexFromIntValue(int value) {
+    return (value - widget.minValue) ~/ widget.step + 1;
+  }
+
   void _maybeCenterValue() {
     if (!isScrolling) {
-      int diff = widget.value - widget.minValue;
+      int diff = currentValue - widget.minValue;
       int index = diff ~/ widget.step;
       _scrollController.animateTo(
         index * itemExtent,

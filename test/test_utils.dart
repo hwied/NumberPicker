@@ -34,7 +34,7 @@ Future<NumberPicker> testNumberPicker({
     StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
       picker = axis == Axis.vertical
           ? picker = NumberPicker(
-              value: value,
+              initialValue: value,
               minValue: minValue,
               maxValue: maxValue,
               step: step,
@@ -44,7 +44,7 @@ Future<NumberPicker> testNumberPicker({
             )
           : NumberPicker(
               axis: Axis.horizontal,
-              value: value,
+              initialValue: value,
               minValue: minValue,
               maxValue: maxValue,
               step: step,
@@ -89,7 +89,7 @@ Future<NumberPicker> testMultipleValuesInPicker({
     StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
       picker = axis == Axis.vertical
           ? picker = NumberPicker(
-              value: value,
+              initialValue: value,
               minValue: minValue,
               maxValue: maxValue,
               step: step,
@@ -98,7 +98,7 @@ Future<NumberPicker> testMultipleValuesInPicker({
               zeroPad: zeroPad,
             )
           : NumberPicker(
-              value: value,
+              initialValue: value,
               minValue: minValue,
               maxValue: maxValue,
               step: step,

@@ -65,7 +65,7 @@ class __IntegerExampleState extends State<_IntegerExample> {
         SizedBox(height: 16),
         Text('Default', style: Theme.of(context).textTheme.headline6),
         NumberPicker(
-          value: _currentIntValue,
+          initialValue: _currentIntValue,
           minValue: 0,
           maxValue: 100,
           step: 10,
@@ -97,7 +97,7 @@ class __IntegerExampleState extends State<_IntegerExample> {
         SizedBox(height: 16),
         Text('Horizontal', style: Theme.of(context).textTheme.headline6),
         NumberPicker(
-          value: _currentHorizontalIntValue,
+          initialValue: _currentHorizontalIntValue,
           minValue: 0,
           maxValue: 100,
           step: 10,

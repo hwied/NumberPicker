@@ -53,13 +53,13 @@ class DecimalNumberPicker extends StatelessWidget {
         NumberPicker(
           minValue: minValue,
           maxValue: maxValue,
-          value: value.floor(),
+          initialValue: value.floor(),
           onChanged: _onIntChanged,
         ),
         NumberPicker(
           minValue: 0,
           maxValue: doubleMaxValue,
-          value: decimalValue,
+          initialValue: decimalValue,
           onChanged: _onDoubleChanged,
         ),
       ],
