@@ -54,6 +54,9 @@ class NumberPicker extends StatefulWidget {
   /// Decoration to apply to central box where the selected value is placed
   final Decoration? decoration;
 
+  /// Whether the direction shall be reversed
+  final bool reverse;
+
   const NumberPicker({
     Key? key,
     required this.minValue,
@@ -71,6 +74,7 @@ class NumberPicker extends StatefulWidget {
     this.decoration,
     this.zeroPad = false,
     this.textMapper,
+    this.reverse = false,
   })  : assert(minValue <= value),
         assert(value <= maxValue),
         super(key: key);
@@ -150,6 +154,7 @@ class _NumberPickerState extends State<NumberPicker> {
         child: Stack(
           children: [
             ListView.builder(
+              reverse: widget.reverse,
               itemCount: listItemsCount,
               scrollDirection: widget.axis,
               controller: _scrollController,
