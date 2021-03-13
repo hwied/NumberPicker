@@ -198,7 +198,14 @@ class _NumberPickerState extends State<NumberPicker> {
                           controller: _textEditingController,
                           onEditingComplete: finished,
                           onSubmitted: (val)=>finished(),
-                          decoration: InputDecoration(border: InputBorder.none),
+                          decoration: widget.inputDecoration ?? InputDecoration(
+                            focusedBorder: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            disabledBorder: InputBorder.none,
+                            border: InputBorder.none,
+                            focusedErrorBorder: InputBorder.none,
+                            errorBorder: InputBorder.none
+                          ),
                           keyboardType: TextInputType.number,
                           style: widget.textStyle,
                           textAlign: TextAlign.center,
