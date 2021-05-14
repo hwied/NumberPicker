@@ -67,7 +67,7 @@ class DecimalNumberPicker extends StatelessWidget {
         NumberPicker(
           minValue: minValue,
           maxValue: maxValue,
-          initialValue: value.floor(),
+          value: value.floor(),
           onChanged: _onIntChanged,
           itemCount: itemCount,
           itemHeight: itemHeight,
@@ -82,7 +82,7 @@ class DecimalNumberPicker extends StatelessWidget {
         NumberPicker(
           minValue: 0,
           maxValue: doubleMaxValue,
-          initialValue: decimalValue,
+          value: decimalValue,
           onChanged: _onDoubleChanged,
           itemCount: itemCount,
           itemHeight: itemHeight,

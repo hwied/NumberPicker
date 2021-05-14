@@ -111,7 +111,7 @@ class _NumberPickerState extends State<NumberPicker> {
       _scrollController = ScrollController(initialScrollOffset: initialOffset);
     }
     _scrollController.addListener(_scrollListener);
-    currentValue = widget.initialValue;
+    currentValue = widget.value;
     _textEditingController.text = currentValue.toString();
   }
 
@@ -168,10 +168,12 @@ class _NumberPickerState extends State<NumberPicker> {
   Widget build(BuildContext context) => Builder(
       builder: (context) {
         VoidCallback finished = (){
-          setState(()=>isEditActive=false);
-          currentValue = int.parse(_textEditingController.text);
-          currentValue = max(widget.minValue, min(currentValue, widget.maxValue));
-          _scrollController.jumpTo(itemExtent*(_indexFromIntValue(currentValue)-1));
+          setState(() {
+            isEditActive = false;
+            currentValue = int.parse(_textEditingController.text);
+            currentValue = max(widget.minValue, min(currentValue, widget.maxValue));
+          });
+          _scrollController.jumpTo(itemExtent*(_indexFromIntValue(currentValue)));
         };
         return GestureDetector(
             onDoubleTap: ()=>setState(()=>isEditActive=true),
@@ -213,16 +215,9 @@ class _NumberPickerState extends State<NumberPicker> {
                          itemExtent: itemExtent,
                          decoration: widget.decoration,
                       ),
-                      if (isEditActive)
-                      Positioned.fill(
-                        child: Opacity(
-                            opacity: 0.5,
-                            // child: Container(
-                            //   width: double.infinity, // widget.axis == Axis.horizontal ? 2*itemExtent * itemCount : widget.itemWidth,
-                            //   height: double.infinity, // widget.axis == Axis.vertical ? 2*itemExtent * itemCount : widget.itemHeight,
-                            // )
-                        )),
-                      if (isEditActive) Center(
+                      if (isEditActive) Center(child: Container(
+                        height: widget.itemHeight,
+                        width: widget.itemWidth,
                         child: TextField(
                           controller: _textEditingController,
                           onEditingComplete: finished,
@@ -239,7 +234,7 @@ class _NumberPickerState extends State<NumberPicker> {
                           style: widget.textStyle,
                           textAlign: TextAlign.center,
                         )
-                      )
+                      ))
                     ],
                   ),
                 )
@@ -264,14 +259,15 @@ class _NumberPickerState extends State<NumberPicker> {
         ? SizedBox.shrink()
         : TextButton(
             onPressed: () {
-              _scrollController.animateTo(itemExtent*(index-1),
+              _scrollController.animateTo(itemExtent*(index),
                 duration: Duration(milliseconds: 300),
                 curve: Curves.easeOutCubic);
                 currentValue = _intValueFromIndex(index);
+                _textEditingController.text = currentValue.toString();
             },
             // padding: const EdgeInsets(0.0),
             child: isEditActive ? Opacity(
-                opacity: 0.5,
+                opacity: 0,
                 child: Text(
                   _getDisplayedValue(value),
                   style: itemStyle,
@@ -308,7 +304,7 @@ class _NumberPickerState extends State<NumberPicker> {
   }
 
   int _indexFromIntValue(int value) {
-    return (value - widget.minValue) ~/ widget.step + 1;
+    return (value - widget.minValue) ~/ widget.step;// + additionalItemsOnEachSide;
   }
 
   void _maybeCenterValue() {
