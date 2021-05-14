@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.1.1]
+
+* Fixed `infiteLoop` to `infiniteLoop` typo...
+
+## [2.1.0]
+
+* Added missing params in decimal numberpicker. #99 
+* Fixed `itemCount` parameter to actually work. #87
+* Added `padding: EdgeInsets.zero` to ListView to make it work without SafeArea. #74
+* Added `infiniteLoop` option. #97
+
+## [2.0.1]
+
+* Fixed empty scrollController position bug #95 
+
 ## [2.0.0] **BREAKING CHANGES**
 * Migrate to **null-safety**.
 * Changed named constructors to two separate widgets.
