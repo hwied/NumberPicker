@@ -124,6 +124,11 @@ class _NumberPickerState extends State<NumberPicker> {
     _scrollController.addListener(_scrollListener);
     currentValue = widget.value;
     _textEditingController.text = currentValue.toString();
+    if (widget.focusNode != null)
+      widget.focusNode!.addListener(() {
+        if (!widget.focusNode!.hasFocus)
+          setState(()=>isEditActive = false);
+      });
   }
 
   void _scrollListener() {
