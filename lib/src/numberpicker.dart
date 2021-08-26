@@ -65,6 +65,12 @@ class NumberPicker extends StatefulWidget {
   /// Whether we scroll in infitie loop
   final bool infiniteLoop;
 
+  /// Whether this widget is Text editable onDoubleTap
+  final bool isEditable;
+
+  /// The focusNode for TextEditing
+  final FocusNode focusNode;
+
   const NumberPicker({
     Key? key,
     required this.minValue,
@@ -85,6 +91,8 @@ class NumberPicker extends StatefulWidget {
     this.reverse = false,
     this.inputDecoration,
     this.infiniteLoop = false,
+    this.isEditable = true
+    this.focusNode
   })  : assert(minValue <= value),
         assert(value <= maxValue),
         super(key: key);
@@ -168,6 +176,7 @@ class _NumberPickerState extends State<NumberPicker> {
   Widget build(BuildContext context) => Builder(
       builder: (context) {
         VoidCallback finished = (){
+          widget.focusNode.unfocus();
           setState(() {
             isEditActive = false;
             currentValue = int.parse(_textEditingController.text);
@@ -176,7 +185,12 @@ class _NumberPickerState extends State<NumberPicker> {
           _scrollController.jumpTo(itemExtent*(_indexFromIntValue(currentValue)));
         };
         return GestureDetector(
-            onDoubleTap: ()=>setState(()=>isEditActive=true),
+            onDoubleTap: () {
+              if (widget.isEditable) {
+                setState(() => isEditActive = true);
+                FocusScope.of(context).requestFocus(widget.focusNode);
+              }
+            },
             child: SizedBox(
                 width: widget.axis == Axis.vertical
                     ? widget.itemWidth
@@ -219,6 +233,7 @@ class _NumberPickerState extends State<NumberPicker> {
                         height: widget.itemHeight,
                         width: widget.itemWidth,
                         child: TextField(
+                          focusNode: widget.focusNode,
                           controller: _textEditingController,
                           onEditingComplete: finished,
                           onSubmitted: (val)=>finished(),
