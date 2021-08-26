@@ -199,7 +199,8 @@ class _NumberPickerState extends State<NumberPicker> {
                 widget.onDoubleTap!();
               if (widget.isEditable) {
                 setState(() => isEditActive = true);
-                FocusScope.of(context).requestFocus(widget.focusNode);
+                widget.focusNode!.unfocus();
+                widget.focusNode!.requestFocus(widget.focusNode);
               }
             },
             child: SizedBox(
@@ -244,6 +245,7 @@ class _NumberPickerState extends State<NumberPicker> {
                         height: widget.itemHeight,
                         width: widget.itemWidth,
                         child: TextField(
+                          autofocus: true,
                           focusNode: widget.focusNode,
                           controller: _textEditingController,
                           onEditingComplete: finished,
