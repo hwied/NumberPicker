@@ -69,7 +69,9 @@ class NumberPicker extends StatefulWidget {
   final bool isEditable;
 
   /// The focusNode for TextEditing
-  final FocusNode focusNode;
+  final FocusNode? focusNode;
+
+  final VoidCallback? onDoubleTap;
 
   const NumberPicker({
     Key? key,
@@ -91,8 +93,9 @@ class NumberPicker extends StatefulWidget {
     this.reverse = false,
     this.inputDecoration,
     this.infiniteLoop = false,
-    this.isEditable = true
-    this.focusNode
+    this.isEditable = true,
+    this.focusNode,
+    this.onDoubleTap
   })  : assert(minValue <= value),
         assert(value <= maxValue),
         super(key: key);
@@ -176,7 +179,8 @@ class _NumberPickerState extends State<NumberPicker> {
   Widget build(BuildContext context) => Builder(
       builder: (context) {
         VoidCallback finished = (){
-          widget.focusNode.unfocus();
+          if (widget.focusNode != null)
+            widget.focusNode!.unfocus();
           setState(() {
             isEditActive = false;
             currentValue = int.parse(_textEditingController.text);
@@ -186,6 +190,8 @@ class _NumberPickerState extends State<NumberPicker> {
         };
         return GestureDetector(
             onDoubleTap: () {
+              if (widget.onDoubleTap != null)
+                widget.onDoubleTap!();
               if (widget.isEditable) {
                 setState(() => isEditActive = true);
                 FocusScope.of(context).requestFocus(widget.focusNode);
